@@ -1,0 +1,16 @@
+# Python 暫存檔
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虛擬環境
+venv/
+env/
+
+# Streamlit 設定與機密變數
+.streamlit/
+.env
+
+# 上傳的暫存報表
+*.csv
+*.xlsx
