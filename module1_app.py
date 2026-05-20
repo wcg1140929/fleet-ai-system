@@ -97,15 +97,30 @@ with tab2:
     else:
         df = st.session_state['cleaned_df']
         
-        # --- 自動計算自建車隊數據 ---
-        st.subheader("1. 您的自有車隊現況 (依據 AI 清洗數據)")
+        # --- 自動計算自有車隊變動數據 ---
+        st.subheader("1. 您的自有車隊現況 (總體擁有成本評估)")
         total_trips = len(df)  # 總趟次
         total_fuel = df['fuel_cost'].sum() if 'fuel_cost' in df.columns else 0 # 總油資
         
+        st.markdown("##### 📍 變動成本 (來自 AI 清洗數據)")
         col1, col2, col3 = st.columns(3)
         col1.metric("分析趟次", f"{total_trips} 趟")
         col2.metric("總油資 (變動成本)", f"${total_fuel:,.0f}")
         col3.metric("單趟平均油資", f"${total_fuel/total_trips:,.0f}" if total_trips>0 else "$0")
+
+        st.markdown("##### 📍 固定成本 (請輸入該區間之費用)")
+        fixed_col1, fixed_col2, fixed_col3 = st.columns(3)
+        with fixed_col1:
+            driver_salary = st.number_input("司機總薪資 (元)", value=60000, step=1000)
+        with fixed_col2:
+            vehicle_depreciation = st.number_input("車輛折舊攤提 (元)", value=25000, step=1000)
+        with fixed_col3:
+            insurance_fees = st.number_input("保險與規費攤提 (元)", value=5000, step=1000)
+            
+        inhouse_fixed_cost = driver_salary + vehicle_depreciation + insurance_fees
+        inhouse_total = total_fuel + inhouse_fixed_cost
+
+        st.info(f"**自有車隊真實總成本 (TCO)：** 變動成本 ${total_fuel:,.0f} + 固定成本 ${inhouse_fixed_cost:,.0f} = **${inhouse_total:,.0f}**")
 
         # --- 讓使用者輸入委外報價 ---
         st.subheader("2. 模擬委外車隊報價")
@@ -117,17 +132,16 @@ with tab2:
         with outsource_col2:
             outsource_admin_fee = st.number_input("每月系統對接與行政管理費 (元)", value=5000)
 
+        # 試算：如果這些趟次全部委外，要花多少錢？
+        outsource_total = (total_trips * outsource_base_fee) + outsource_admin_fee
+        
         # --- 成本試算與視覺化圖表 ---
         st.subheader("3. 成本比較決策")
-        
-        # 試算：如果這些趟次全部委外，要花多少錢？
-        inhouse_total = total_fuel # (備註：未來可加入司機薪資、折舊等固定成本)
-        outsource_total = (total_trips * outsource_base_fee) + outsource_admin_fee
         
         # 使用 Streamlit 內建的簡單長條圖呈現比較
         chart_data = pd.DataFrame(
             {"總成本 (元)": [inhouse_total, outsource_total]},
-            index=["自有車隊 (目前)", "委外車隊 (模擬)"]
+            index=["自有車隊 (真實 TCO)", "委外車隊 (模擬)"]
         )
         
         st.bar_chart(chart_data, color="#2E86C1")
