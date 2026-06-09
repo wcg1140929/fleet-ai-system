@@ -13,7 +13,7 @@ st.title("🚚 車隊戰略、ESG 與硬體資產決策中樞")
 api_key = st.secrets.get("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 else:
     st.error("找不到 API Key，請確認 .streamlit/secrets.toml 設定。")
     st.stop()
